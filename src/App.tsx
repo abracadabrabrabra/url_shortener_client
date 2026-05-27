@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import NotFoundPage from './pages/NotFoundPage';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 const TermsPage = () => <div style={{ padding: '2rem' }}>Условия использования (скоро)</div>;
 const PrivacyPage = () => <div style={{ padding: '2rem' }}>Политика конфиденциальности (скоро)</div>;
@@ -19,9 +20,23 @@ function App() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
 
-        {/* dashboard  not protected */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
+        {/* protected dashboard */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Navigate to="/dashboard" replace />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />

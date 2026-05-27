@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import {useRef, useState} from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../context/AuthContext';
 import './AuthPages.css';
 
 export default function RegisterPage() {
@@ -8,33 +8,50 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+  const hasSubmitted = useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (hasSubmitted.current) {
+      console.log('Submission already in progress');
+      return;
+    }
+    hasSubmitted.current = true;
     setError('');
+    setIsLoading(true);
 
     if (!email || !password) {
       setError('Пожалуйста, заполните все поля');
+      setIsLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
       setError('Пароли не совпадают');
+      setIsLoading(false);
       return;
     }
 
     if (password.length < 6) {
       setError('Пароль должен содержать минимум 6 символов');
+      setIsLoading(false);
       return;
     }
 
     try {
+      console.log('Registering user:', email);
       await register(email, password);
+      console.log('Registration successful, navigating to dashboard');
       navigate('/dashboard');
     } catch (err) {
+      console.error('Registration error:', err);
       setError('Ошибка регистрации. Попробуйте другой email.');
+    } finally {
+      setIsLoading(false);
+      hasSubmitted.current = false;
     }
   };
 
@@ -55,6 +72,7 @@ export default function RegisterPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Введите ваш email"
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -66,6 +84,7 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Введите пароль"
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -77,11 +96,12 @@ export default function RegisterPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Повторите пароль"
               required
+              disabled={isLoading}
             />
           </div>
 
-          <button type="submit" className="submit-btn">
-            Зарегистрироваться
+          <button type="submit" className="submit-btn" disabled={isLoading}>
+            {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
           </button>
         </form>
 
@@ -98,7 +118,6 @@ export default function RegisterPage() {
           </button>
         </div>
 
-        {/* Login page */}
         <div className="auth-footer">
           <p className="login-link">
             Уже есть аккаунт? <Link to="/login">Войти</Link>

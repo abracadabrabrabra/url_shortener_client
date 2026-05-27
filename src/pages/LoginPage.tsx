@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import {useRef, useState} from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../context/AuthContext';
 import './AuthPages.css';
 
 export default function LoginPage() {
@@ -8,23 +8,38 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const hasSubmitted = useRef(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (hasSubmitted.current) {
+      console.log('Submission already in progress');
+      return;
+    }
+    hasSubmitted.current = true;
     setError('');
+    setIsLoading(true);
 
     if (!email || !password) {
       setError('Пожалуйста, заполните все поля');
+      setIsLoading(false);
       return;
     }
 
     try {
+      console.log('Submitting login form');
       await login(email, password);
+      console.log('Login successful, navigating to dashboard');
       navigate('/dashboard');
     } catch (err) {
+      console.error('Login error:', err);
       setError('Неверный email или пароль');
+    } finally {
+      setIsLoading(false);
+      hasSubmitted.current = false;
     }
   };
 
@@ -45,6 +60,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Введите ваш email"
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -56,6 +72,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Введите ваш пароль"
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -65,6 +82,7 @@ export default function LoginPage() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
+                disabled={isLoading}
               />
               Запомнить меня
             </label>
@@ -73,8 +91,8 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <button type="submit" className="submit-btn">
-            Войти
+          <button type="submit" className="submit-btn" disabled={isLoading}>
+            {isLoading ? 'Вход...' : 'Войти'}
           </button>
         </form>
 

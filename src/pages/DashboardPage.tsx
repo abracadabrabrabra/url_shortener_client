@@ -1,21 +1,23 @@
-import { useEffect, useState } from 'react';
+import {useEffect, useState, useCallback, useRef} from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../context/AuthContext';
 import type { Link as LinkType } from '../types';
 import './DashboardPage.css';
 
 export default function DashboardPage() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, userEmail } = useAuth();
   const navigate = useNavigate();
   const [links, setLinks] = useState<LinkType[]>([]);
-  const [loading, setLoading] = useState(true);
   const [newUrl, setNewUrl] = useState('');
   const [error, setError] = useState('');
+  const hasLoaded = useRef(false);
 
-  const userEmail = localStorage.getItem('user_email') || 'user@example.com';
+  console.log('DashboardPage rendering', { isAuthenticated, userEmail });
 
-  useEffect(() => {
-    // TODO: загрузить ссылки с бэкенда
+  const loadMockLinks = useCallback(() => {
+    if (hasLoaded.current) return;
+    hasLoaded.current = true;
+
     const mockLinks: LinkType[] = [
       {
         short_key: 'abc123',
@@ -35,11 +37,17 @@ export default function DashboardPage() {
       },
     ];
 
-    setTimeout(() => {
-      setLinks(mockLinks);
-      setLoading(false);
-    }, 500);
+    setLinks(mockLinks);
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    loadMockLinks();
+  }, [isAuthenticated, navigate, loadMockLinks]);
 
   const handleCreateLink = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,23 +65,24 @@ export default function DashboardPage() {
       return;
     }
 
-    console.log('Create link for:', newUrl);
-
+    const shortKey = Math.random().toString(36).substring(2, 8);
     const newLink: LinkType = {
-      short_key: Math.random().toString(36).substring(2, 8),
+      short_key: shortKey,
       original_url: newUrl,
-      short_url: `http://localhost:8000/${Math.random().toString(36).substring(2, 8)}`,
+      short_url: `http://localhost:8000/${shortKey}`,
       user_id: 1,
       clicks_count: 0,
       created_at: new Date().toISOString(),
     };
 
-    setLinks([newLink, ...links]);
+    setLinks(prevLinks => [newLink, ...prevLinks]);
     setNewUrl('');
+
+    console.log('Created mock link for:', newUrl);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 
@@ -83,23 +92,9 @@ export default function DashboardPage() {
   };
 
   const handleViewStats = (shortKey: string) => {
-    // TODO: перейти на страницу статистики ссылки
     navigate(`/links/${shortKey}/stats`);
     console.log('View stats for:', shortKey);
   };
-
-  if (loading) {
-    return (
-      <div className="dashboard-container">
-        <div className="dashboard-card">
-          <div className="loading-state">
-            <div className="loading-spinner"></div>
-            <p>Загрузка ваших ссылок...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="dashboard-container">
@@ -110,15 +105,14 @@ export default function DashboardPage() {
             <p className="dashboard-subtitle">Управляйте своими короткими ссылками</p>
           </div>
 
-          {/* avatar & email */}
           <div className="user-info">
             <div className="user-avatar">
               <span className="avatar-initials">
-                {userEmail.substring(0, 2).toUpperCase()}
+                {(userEmail || 'U').substring(0, 2).toUpperCase()}
               </span>
             </div>
             <div className="user-details">
-              <span className="user-email">{userEmail}</span>
+              <span className="user-email">{userEmail || 'user@example.com'}</span>
               <button onClick={handleLogout} className="logout-btn">
                 Выйти
               </button>
@@ -220,7 +214,6 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Copyright */}
         <div className="dashboard-copyright">
           © 2026 Shortly. Все права защищены.
         </div>
