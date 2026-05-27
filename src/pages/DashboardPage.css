@@ -304,7 +304,54 @@
   border-radius: 20px;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.copy-btn,
+.stats-btn {
+  background: none;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  color: #666;
+}
+
+.copy-btn:hover {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+.stats-btn:hover {
+  background: #ff9800;
+  border-color: #ff9800;
+  color: white;
+}
+
+.dashboard-copyright {
+  text-align: center;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid #e0e0e0;
+  font-size: 12px;
+  color: #999;
+}
+
 @media (max-width: 768px) {
+  .dashboard-container {
+    padding: 20px;
+  }
+
+  .dashboard-card {
+    padding: 24px;
+  }
+
   .dashboard-header {
     flex-direction: column;
     text-align: center;
@@ -317,5 +364,30 @@
 
   .user-details {
     align-items: center;
+  }
+
+  .create-link-form {
+    flex-direction: column;
+  }
+
+  .create-link-btn {
+    width: 100%;
+  }
+
+  .links-table th,
+  .links-table td {
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .copy-btn,
+  .stats-btn {
+    padding: 4px 8px;
+    font-size: 12px;
   }
 }

@@ -26,6 +26,10 @@ export default function NotFoundPage() {
             <li><Link to="/dashboard">Дашборд</Link></li>
           </ul>
         </div>
+        {/* Copyright */}
+        <div className="not-found-copyright">
+          © 2026 Shortly. Все права защищены.
+        </div>
       </div>
     </div>
   );

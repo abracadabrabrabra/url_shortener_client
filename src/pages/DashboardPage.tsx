@@ -82,6 +82,12 @@ export default function DashboardPage() {
     alert('Ссылка скопирована в буфер обмена!');
   };
 
+  const handleViewStats = (shortKey: string) => {
+    // TODO: перейти на страницу статистики ссылки
+    navigate(`/links/${shortKey}/stats`);
+    console.log('View stats for:', shortKey);
+  };
+
   if (loading) {
     return (
       <div className="dashboard-container">
@@ -157,7 +163,7 @@ export default function DashboardPage() {
                     <th>Оригинальная ссылка</th>
                     <th>Переходы</th>
                     <th>Дата создания</th>
-                    <th></th>
+                    <th>Действия</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -189,12 +195,22 @@ export default function DashboardPage() {
                           : '-'}
                       </td>
                       <td>
-                        <button
-                          onClick={() => handleCopyLink(link.short_url)}
-                          className="copy-btn"
-                        >
-                          📋 Копировать
-                        </button>
+                        <div className="action-buttons">
+                          <button
+                            onClick={() => handleCopyLink(link.short_url)}
+                            className="copy-btn"
+                            title="Копировать ссылку"
+                          >
+                            📋
+                          </button>
+                          <button
+                            onClick={() => handleViewStats(link.short_key)}
+                            className="stats-btn"
+                            title="Подробная статистика"
+                          >
+                            📊
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -202,6 +218,11 @@ export default function DashboardPage() {
               </table>
             </div>
           )}
+        </div>
+
+        {/* Copyright */}
+        <div className="dashboard-copyright">
+          © 2026 Shortly. Все права защищены.
         </div>
       </div>
     </div>

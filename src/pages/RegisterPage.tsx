@@ -98,7 +98,14 @@ export default function RegisterPage() {
           </button>
         </div>
 
+        {/* Login page */}
         <div className="auth-footer">
+          <p className="login-link">
+            Уже есть аккаунт? <Link to="/login">Войти</Link>
+          </p>
+        </div>
+
+        <div className="terms-footer">
           <small>
             Регистрируясь, вы соглашаетесь с нашими{' '}
             <Link to="/terms">Условиями использования</Link> и{' '}
