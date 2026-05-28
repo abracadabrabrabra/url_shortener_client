@@ -177,6 +177,24 @@ class ApiClient {
     });
   }
 
+  async getUserLinks(skip: number = 0, limit: number = 20, includeInactive: boolean = false) {
+    const params = new URLSearchParams({
+      skip: skip.toString(),
+      limit: limit.toString(),
+      include_inactive: includeInactive.toString(),
+    });
+
+    return this.request<Array<{
+      original_url: string;
+      short_code: string;
+      short_url: string;
+      user_id: number;
+      clicks_count: number;
+      created_at: string;
+      is_active: boolean;
+    }>>(`/user/links?${params.toString()}`);
+  }
+
 }
 
 export const apiClient = new ApiClient();
