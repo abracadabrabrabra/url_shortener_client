@@ -239,7 +239,7 @@
 
 .links-table th:nth-child(2),
 .links-table td:nth-child(2) {
-  width: 39%;
+  width: 36%;
 }
 
 .links-table th:nth-child(3),
@@ -255,7 +255,7 @@
 
 .links-table th:nth-child(5),
 .links-table td:nth-child(5) {
-  width: 16%;
+  width: 19%;
   text-align: center;
 }
 
@@ -307,6 +307,51 @@
   font-family: monospace;
   font-size: 12px;
   color: #4556c6;
+}
+
+.short-link-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.short-link-cell .short-link {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.edit-short-link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid #dfe5f4;
+  border-radius: 7px;
+  background: #f8faff;
+  color: #5367d8;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.edit-short-link-btn:hover:not(:disabled) {
+  background: #eaf1ff;
+  border-color: #9fb0f1;
+  color: #4556c6;
+}
+
+.edit-short-link-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .original-link-scroll {
@@ -515,7 +560,8 @@
 }
 
 .copy-btn,
-.stats-btn {
+.stats-btn,
+.delete-link-btn {
   background: none;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
@@ -536,6 +582,17 @@
   background: #ff9800;
   border-color: #ff9800;
   color: white;
+}
+
+.delete-link-btn:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: white;
+}
+
+.delete-link-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .dashboard-copyright {
@@ -583,7 +640,8 @@
   }
 
   .copy-btn,
-  .stats-btn {
+  .stats-btn,
+  .delete-link-btn {
     padding: 4px 8px;
     font-size: 14px;
   }

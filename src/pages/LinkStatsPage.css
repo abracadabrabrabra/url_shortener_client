@@ -543,6 +543,43 @@
   fill: #2563eb;
   stroke: white;
   stroke-width: 3;
+  transition: r 0.16s ease, fill 0.16s ease;
+}
+
+.chart-point-hitbox {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.chart-point-group:hover .chart-point {
+  r: 6;
+  fill: #1d4ed8;
+}
+
+.chart-tooltip {
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+
+.chart-point-group:hover .chart-tooltip {
+  opacity: 1;
+}
+
+.chart-tooltip-box {
+  fill: #202642;
+  filter: drop-shadow(0 8px 14px rgba(47, 52, 70, 0.18));
+}
+
+.chart-tooltip-date {
+  fill: #dbe4ff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.chart-tooltip-value {
+  fill: white;
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .analytics-footer {

@@ -21,6 +21,23 @@ interface ApiCreateLinkResponse {
   user_id?: number;
 }
 
+interface ApiDeleteLinkResponse {
+  msg: string;
+  short_key: string;
+  is_active: boolean;
+  deleted_at: string;
+}
+
+interface ApiUpdateLinkResponse {
+  old_short_key: string;
+  short_key: string;
+  short_url?: string;
+  original_url: string;
+  clicks_count?: number;
+  created_at?: string;
+  is_active?: boolean;
+}
+
 const buildShortUrl = (shortKey: string, shortUrl?: string) => {
   if (shortUrl) return shortUrl;
 
@@ -299,6 +316,27 @@ class ApiClient {
       clicks_count: link.clicks_count,
       created_at: link.created_at,
     }));
+  }
+
+  async deleteLink(shortKey: string): Promise<ApiDeleteLinkResponse> {
+    return this.request<ApiDeleteLinkResponse>(`/api/links/${shortKey}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async updateShortKey(shortKey: string): Promise<Link> {
+    const link = await this.request<ApiUpdateLinkResponse>(`/api/links/${shortKey}`, {
+      method: 'PATCH',
+    });
+
+    return {
+      short_key: link.short_key,
+      original_url: link.original_url,
+      short_url: buildShortUrl(link.short_key, link.short_url),
+      user_id: null,
+      clicks_count: link.clicks_count,
+      created_at: link.created_at,
+    };
   }
 
   async getUserStats(): Promise<UserStats> {

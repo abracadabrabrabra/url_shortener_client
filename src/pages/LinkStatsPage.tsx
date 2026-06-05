@@ -107,7 +107,15 @@ function ClicksChart({ data }: { data: LinkAnalytics['daily_clicks'] }) {
   const points = chartData.map((item, index) => {
     const x = padding.left + (chartData.length === 1 ? innerWidth / 2 : (innerWidth / (chartData.length - 1)) * index);
     const y = padding.top + innerHeight - (item.clicks / maxClicks) * innerHeight;
-    return { ...item, x, y };
+    const tooltipWidth = 118;
+    const tooltipHeight = 38;
+    const tooltipX = Math.min(
+      width - padding.right - tooltipWidth,
+      Math.max(padding.left, x - tooltipWidth / 2)
+    );
+    const tooltipY = Math.max(padding.top + 6, y - tooltipHeight - 12);
+
+    return { ...item, x, y, tooltipX, tooltipY, tooltipWidth, tooltipHeight };
   });
 
   const linePath = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
@@ -132,8 +140,34 @@ function ClicksChart({ data }: { data: LinkAnalytics['daily_clicks'] }) {
         <path d={linePath} className="chart-line" />
 
         {points.map((point) => (
-          <g key={point.date || 'empty'}>
+          <g key={point.date || 'empty'} className="chart-point-group">
+            <circle cx={point.x} cy={point.y} r="12" className="chart-point-hitbox" />
             <circle cx={point.x} cy={point.y} r="4" className="chart-point" />
+            <g className="chart-tooltip" pointerEvents="none">
+              <rect
+                x={point.tooltipX}
+                y={point.tooltipY}
+                width={point.tooltipWidth}
+                height={point.tooltipHeight}
+                className="chart-tooltip-box"
+              />
+              <text
+                x={point.tooltipX + point.tooltipWidth / 2}
+                y={point.tooltipY + 15}
+                textAnchor="middle"
+                className="chart-tooltip-date"
+              >
+                {point.date ? new Date(point.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) : '-'}
+              </text>
+              <text
+                x={point.tooltipX + point.tooltipWidth / 2}
+                y={point.tooltipY + 30}
+                textAnchor="middle"
+                className="chart-tooltip-value"
+              >
+                {point.clicks.toLocaleString('ru-RU')} кликов
+              </text>
+            </g>
             <text x={point.x} y={height - 2} textAnchor="middle" className="chart-axis-text">
               {point.date ? new Date(point.date).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }) : '-'}
             </text>
