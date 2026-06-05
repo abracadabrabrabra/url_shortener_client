@@ -1,23 +1,31 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiClient } from '../api/client';
-import type { Link as LinkType } from '../types';
+import type { Link as LinkType, UserStats } from '../types';
 import './DashboardPage.css';
+
+type CopyToast = {
+  type: 'success' | 'error';
+  left: number;
+  top: number;
+} | null;
 
 export default function DashboardPage() {
   const { isAuthenticated, logout, userEmail } = useAuth();
   const navigate = useNavigate();
   const [links, setLinks] = useState<LinkType[]>([]);
-  const [newUrl, setNewUrl] = useState('');
-  const [error, setError] = useState('');
+  const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
+  const [copyToast, setCopyToast] = useState<CopyToast>(null);
   const pageSize = 20;
   const loadingRef = useRef(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastElementRef = useRef<HTMLDivElement | null>(null);
+  const copyStatusTimeoutRef = useRef<number | null>(null);
 
   console.log('DashboardPage rendering', { isAuthenticated, userEmail, linksCount: links.length });
 
@@ -56,6 +64,18 @@ export default function DashboardPage() {
     }
   }, [page, pageSize, navigate]);
 
+  const loadStats = useCallback(async () => {
+    try {
+      const data = await apiClient.getUserStats();
+      setStats(data);
+    } catch (error) {
+      console.error('Failed to load user stats:', error);
+      if (error instanceof Error && error.message === 'Unauthorized') {
+        navigate('/login');
+      }
+    }
+  }, [navigate]);
+
   useEffect(() => {
     if (observerRef.current) {
       observerRef.current.disconnect();
@@ -91,59 +111,45 @@ export default function DashboardPage() {
     setLinks([]);
     setPage(0);
     setHasMore(true);
+    loadStats();
     loadLinks(true);
-  }, [isAuthenticated, navigate]);
-
-  const handleCreateLink = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!newUrl) {
-      setError('Пожалуйста, введите URL');
-      return;
-    }
-
-    let validatedUrl = newUrl;
-    try {
-      if (!newUrl.startsWith('http://') && !newUrl.startsWith('https://')) {
-        validatedUrl = 'https://' + newUrl;
-      }
-      new URL(validatedUrl);
-    } catch {
-      setError('Пожалуйста, введите корректный URL (например, https://example.com)');
-      return;
-    }
-
-    try {
-      console.log('Creating short link for:', validatedUrl);
-      const result = await apiClient.createShorten(validatedUrl, true);
-
-      const newLink: LinkType = {
-        short_key: result.short_code,
-        original_url: result.original_url,
-        short_url: result.short_url,
-        user_id: result.user_id || null,
-        clicks_count: 0,
-        created_at: new Date().toISOString(),
-      };
-
-      setLinks(prevLinks => [newLink, ...prevLinks]);
-      setNewUrl('');
-      console.log('Created short link:', result);
-    } catch (error) {
-      console.error('Failed to create link:', error);
-      setError('Ошибка при создании ссылки. Попробуйте позже.');
-    }
-  };
+  }, [isAuthenticated, navigate, loadStats]);
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
-  const handleCopyLink = (shortUrl: string) => {
-    navigator.clipboard.writeText(shortUrl);
-    alert('Ссылка скопирована в буфер обмена!');
+  const showCopyToast = (button: HTMLButtonElement, type: 'success' | 'error') => {
+    const rect = button.getBoundingClientRect();
+    setCopyToast({
+      type,
+      left: rect.left + rect.width / 2,
+      top: rect.top - 8,
+    });
+  };
+
+  const handleCopyLink = async (
+    event: React.MouseEvent<HTMLButtonElement>,
+    shortUrl: string
+  ) => {
+    const button = event.currentTarget;
+
+    if (copyStatusTimeoutRef.current) {
+      window.clearTimeout(copyStatusTimeoutRef.current);
+    }
+
+    try {
+      await navigator.clipboard.writeText(shortUrl);
+      showCopyToast(button, 'success');
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+      showCopyToast(button, 'error');
+    }
+
+    copyStatusTimeoutRef.current = window.setTimeout(() => {
+      setCopyToast(null);
+    }, 2000);
   };
 
   const handleViewStats = (shortKey: string) => {
@@ -161,6 +167,10 @@ export default function DashboardPage() {
           </div>
 
           <div className="user-info">
+            <button onClick={() => navigate('/links/new')} className="create-link-nav-btn">
+              <span className="create-link-plus">+</span>
+              Создать ссылку
+            </button>
             <div className="user-avatar">
               <span className="avatar-initials">
                 {(userEmail || 'U').substring(0, 2).toUpperCase()}
@@ -168,29 +178,74 @@ export default function DashboardPage() {
             </div>
             <div className="user-details">
               <span className="user-email">{userEmail || 'user@example.com'}</span>
-              <button onClick={handleLogout} className="logout-btn">
-                Выйти
+              <button onClick={handleLogout} className="logout-btn" aria-label="Выйти" title="Выйти">
+                <svg viewBox="0 0 24 24" className="logout-icon" aria-hidden="true">
+                  <path d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15" />
+                </svg>
               </button>
             </div>
           </div>
         </div>
 
-        <div className="create-link-section">
-          <h2>Создать новую ссылку</h2>
-          {error && <div className="error-message" style={{ marginBottom: '16px' }}>{error}</div>}
-          <form onSubmit={handleCreateLink} className="create-link-form">
-            <input
-              type="text"
-              value={newUrl}
-              onChange={(e) => setNewUrl(e.target.value)}
-              placeholder="Введите длинную ссылку (например, example.com)"
-              className="create-link-input"
-              required
-            />
-            <button type="submit" className="create-link-btn" disabled={loading}>
-              {loading ? 'Создание...' : 'Сократить'}
-            </button>
-          </form>
+        <div className="stats-grid">
+          <div className="stat-card stat-card-blue">
+            <div className="stat-main">
+              <div className="stat-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" className="stat-svg">
+                  <path d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+                </svg>
+              </div>
+              <div>
+                <div className="stat-label">Всего ссылок</div>
+                <div className="stat-value">{stats ? stats.total_links.toLocaleString('ru-RU') : '—'}</div>
+              </div>
+            </div>
+            <div className="stat-description">Все созданные ссылки</div>
+          </div>
+
+          <div className="stat-card stat-card-green">
+            <div className="stat-main">
+              <div className="stat-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" className="stat-svg">
+                  <path d="M6 19V12" />
+                  <path d="M12 19V8" />
+                  <path d="M18 19V5" />
+                </svg>
+              </div>
+              <div>
+                <div className="stat-label">Всего кликов</div>
+                <div className="stat-value">{stats ? stats.total_clicks.toLocaleString('ru-RU') : '—'}</div>
+              </div>
+            </div>
+            <div className="stat-description">Все переходы по ссылкам</div>
+          </div>
+
+          <div className="stat-card stat-card-purple">
+            <div className="stat-main">
+              <div className="stat-icon">↗</div>
+              <div>
+                <div className="stat-label">Кликов сегодня</div>
+                <div className="stat-value">{stats ? stats.clicks_today.toLocaleString('ru-RU') : '—'}</div>
+              </div>
+            </div>
+            <div className="stat-description">Переходы за сегодня</div>
+          </div>
+
+          <div className="stat-card stat-card-orange">
+            <div className="stat-main">
+              <div className="stat-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" className="stat-svg">
+                  <path d="M4 16L9 11L13 15L20 8" />
+                  <path d="M15 8H20V13" />
+                </svg>
+              </div>
+              <div>
+                <div className="stat-label">Кликов за месяц</div>
+                <div className="stat-value">{stats ? stats.clicks_this_month.toLocaleString('ru-RU') : '—'}</div>
+              </div>
+            </div>
+            <div className="stat-description">Переходы за месяц</div>
+          </div>
         </div>
 
         <div className="links-section">
@@ -200,7 +255,7 @@ export default function DashboardPage() {
               <div className="empty-state-icon">🔗</div>
               <p>У вас пока нет созданных ссылок</p>
               <p style={{ fontSize: '14px', color: '#999' }}>
-                Создайте первую ссылку с помощью формы выше
+                Создайте первую ссылку на отдельной странице
               </p>
             </div>
           ) : (
@@ -229,11 +284,11 @@ export default function DashboardPage() {
                         </a>
                       </td>
                       <td>
-                        <a href={link.original_url} target="_blank" rel="noopener noreferrer">
-                          {link.original_url.length > 50
-                            ? link.original_url.substring(0, 50) + '...'
-                            : link.original_url}
-                        </a>
+                        <div className="original-link-scroll">
+                          <a href={link.original_url} target="_blank" rel="noopener noreferrer">
+                            {link.original_url}
+                          </a>
+                        </div>
                       </td>
                       <td>
                         <span className="clicks-badge">{link.clicks_count || 0}</span>
@@ -245,13 +300,15 @@ export default function DashboardPage() {
                       </td>
                       <td>
                         <div className="action-buttons">
-                          <button
-                            onClick={() => handleCopyLink(link.short_url)}
-                            className="copy-btn"
-                            title="Копировать ссылку"
-                          >
-                            📋
-                          </button>
+                          <div className="copy-action">
+                            <button
+                              onClick={(event) => handleCopyLink(event, link.short_url)}
+                              className="copy-btn"
+                              title="Копировать ссылку"
+                            >
+                              📋
+                            </button>
+                          </div>
                           <button
                             onClick={() => handleViewStats(link.short_key)}
                             className="stats-btn"
@@ -291,6 +348,17 @@ export default function DashboardPage() {
           © 2026 Shortly. Все права защищены.
         </div>
       </div>
+      {copyToast && createPortal(
+        <div
+          className={`copy-status copy-status-floating ${
+            copyToast.type === 'error' ? 'copy-status-error' : ''
+          }`}
+          style={{ left: copyToast.left, top: copyToast.top }}
+        >
+          {copyToast.type === 'error' ? 'Не скопировано' : 'Скопировано!'}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

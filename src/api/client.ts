@@ -1,4 +1,42 @@
+import type { Link, LinkAnalytics, UserStats } from '../types';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+interface ApiLinkResponse {
+  original_url: string;
+  short_code?: string;
+  short_key?: string;
+  short_url?: string;
+  user_id: number | null;
+  clicks_count?: number;
+  created_at?: string;
+  is_active?: boolean;
+}
+
+interface ApiCreateLinkResponse {
+  original_url: string;
+  short_code?: string;
+  short_key?: string;
+  short_url?: string;
+  user_id?: number;
+}
+
+const buildShortUrl = (shortKey: string, shortUrl?: string) => {
+  if (shortUrl) return shortUrl;
+
+  try {
+    const baseUrl = new URL(API_BASE_URL);
+    if (baseUrl.hostname === '0.0.0.0') {
+      baseUrl.hostname = 'localhost';
+    }
+    baseUrl.pathname = `/${shortKey}`;
+    baseUrl.search = '';
+    baseUrl.hash = '';
+    return baseUrl.toString();
+  } catch {
+    return `/${shortKey}`;
+  }
+};
 
 if (!API_BASE_URL) {
   console.error('VITE_API_URL is not defined! Check your .env file');
@@ -92,7 +130,7 @@ class ApiClient {
     if (!refreshToken) return false;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: refreshToken }),
@@ -119,7 +157,7 @@ class ApiClient {
 
   async logout(refreshToken: string) {
     try {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: refreshToken }),
@@ -135,19 +173,19 @@ class ApiClient {
   }
 
   async logoutAll() {
-    await this.request('/auth/logout-all', { method: 'POST' });
+    await this.request('/api/auth/logout-all', { method: 'POST' });
     this.clearAuth();
   }
 
   async register(email: string, password: string) {
-    return this.request<{ user_id: number; email: string }>('/auth/register', {
+    return this.request<{ user_id: number; email: string }>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
   }
 
   async login(email: string, password: string) {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ username: email, password }),
@@ -165,34 +203,106 @@ class ApiClient {
   }
 
   async createShorten(originalUrl: string, protected_: boolean = false) {
-    const endpoint = protected_ ? '/shorten/protected' : '/shorten';
-    return this.request<{
-      original_url: string;
-      short_code: string;
-      short_url: string;
-      user_id?: number;
-    }>(endpoint, {
+    const endpoint = protected_ ? '/api/shorten/protected' : '/shorten';
+    const link = await this.request<ApiCreateLinkResponse>(endpoint, {
       method: 'POST',
       body: JSON.stringify({ original_url: originalUrl }),
     });
+
+    const shortCode = link.short_code || link.short_key || '';
+
+    return {
+      original_url: link.original_url,
+      short_code: shortCode,
+      short_url: buildShortUrl(shortCode, link.short_url),
+      user_id: link.user_id,
+    };
   }
 
-  async getUserLinks(skip: number = 0, limit: number = 20, includeInactive: boolean = false) {
+  async getLinkStats(shortKey: string): Promise<Link> {
+    const link = await this.request<ApiLinkResponse>(`/api/links/${shortKey}/stats`);
+
+    return {
+      short_key: link.short_key || link.short_code || shortKey,
+      original_url: link.original_url,
+      short_url: buildShortUrl(link.short_key || link.short_code || shortKey, link.short_url),
+      user_id: link.user_id,
+      clicks_count: link.clicks_count,
+      created_at: link.created_at,
+    };
+  }
+
+  async getLinkAnalytics(shortKey: string, dateFrom: string, dateTo: string): Promise<LinkAnalytics> {
+    const params = new URLSearchParams({
+      date_from: dateFrom,
+      date_to: dateTo,
+    });
+
+    return this.request<LinkAnalytics>(`/api/links/${shortKey}/analytics?${params.toString()}`);
+  }
+
+  getQrCodeUrl(shortKey: string, scale: number = 10): string {
+    const params = new URLSearchParams({ scale: scale.toString() });
+    return `${API_BASE_URL}/api/qr/${shortKey}?${params.toString()}`;
+  }
+
+  async createCustomQr(
+    shortKey: string,
+    options: {
+      darkColor?: string;
+      lightColor?: string;
+      scale: number;
+      logoFile?: File | null;
+    }
+  ): Promise<Blob> {
+    const formData = new FormData();
+    if (options.darkColor) formData.append('dark_color', options.darkColor);
+    if (options.lightColor) formData.append('light_color', options.lightColor);
+    formData.append('scale', options.scale.toString());
+    formData.append('use_default_logo', 'false');
+    if (options.logoFile) formData.append('logo_file', options.logoFile);
+
+    const headers: Record<string, string> = {};
+    const token = this.getAccessToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/qr/${shortKey}/custom`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.detail || `HTTP ${response.status}`);
+    }
+
+    return response.blob();
+  }
+
+  async getUserLinks(skip: number = 0, limit: number = 20, includeInactive: boolean = false): Promise<Link[]> {
     const params = new URLSearchParams({
       skip: skip.toString(),
       limit: limit.toString(),
       include_inactive: includeInactive.toString(),
     });
 
-    return this.request<Array<{
-      original_url: string;
-      short_code: string;
-      short_url: string;
-      user_id: number;
-      clicks_count: number;
-      created_at: string;
-      is_active: boolean;
-    }>>(`/user/links?${params.toString()}`);
+    const links = await this.request<ApiLinkResponse[]>(`/api/user/links?${params.toString()}`);
+
+    return links.map((link) => ({
+      short_key: link.short_key || link.short_code || '',
+      original_url: link.original_url,
+      short_url: buildShortUrl(link.short_key || link.short_code || '', link.short_url),
+      user_id: link.user_id,
+      clicks_count: link.clicks_count,
+      created_at: link.created_at,
+    }));
+  }
+
+  async getUserStats(): Promise<UserStats> {
+    return this.request<UserStats>('/api/user/stats');
   }
 
 }
