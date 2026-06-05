@@ -96,19 +96,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="divider">
-          <span>или</span>
-        </div>
-
-        <div className="social-buttons">
-          <button className="social-btn disabled" disabled>
-            <span>📧</span> Войти через Google
-          </button>
-          <button className="social-btn disabled" disabled>
-            <span>🐱</span> Войти через GitHub
-          </button>
-        </div>
-
         <div className="auth-footer">
           Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
         </div>

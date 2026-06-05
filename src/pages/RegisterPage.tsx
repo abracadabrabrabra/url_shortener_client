@@ -105,19 +105,6 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <div className="divider">
-          <span>или</span>
-        </div>
-
-        <div className="social-buttons">
-          <button className="social-btn disabled" disabled>
-            <span>📧</span> Продолжить с Google
-          </button>
-          <button className="social-btn disabled" disabled>
-            <span>🐱</span> Продолжить с GitHub
-          </button>
-        </div>
-
         <div className="auth-footer">
           <p className="login-link">
             Уже есть аккаунт? <Link to="/login">Войти</Link>
