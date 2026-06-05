@@ -1,4 +1,4 @@
-import {useRef, useState} from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AuthPages.css';
@@ -15,31 +15,30 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (hasSubmitted.current) {
-      console.log('Submission already in progress');
-      return;
-    }
-    hasSubmitted.current = true;
     setError('');
-    setIsLoading(true);
 
     if (!email || !password) {
       setError('Пожалуйста, заполните все поля');
-      setIsLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
       setError('Пароли не совпадают');
-      setIsLoading(false);
       return;
     }
 
     if (password.length < 6) {
       setError('Пароль должен содержать минимум 6 символов');
-      setIsLoading(false);
       return;
     }
+
+    if (hasSubmitted.current) {
+      console.log('Submission already in progress');
+      return;
+    }
+
+    hasSubmitted.current = true;
+    setIsLoading(true);
 
     try {
       console.log('Registering user:', email);
@@ -49,9 +48,9 @@ export default function RegisterPage() {
     } catch (err) {
       console.error('Registration error:', err);
       setError('Ошибка регистрации. Попробуйте другой email.');
+      hasSubmitted.current = false;
     } finally {
       setIsLoading(false);
-      hasSubmitted.current = false;
     }
   };
 
@@ -113,7 +112,7 @@ export default function RegisterPage() {
 
         <div className="terms-footer">
           <small>
-            Регистрируясь, вы соглашаетесь с нашими{' '}
+            Регистрируясь, вы соглашаетесь с нашимы{' '}
             <Link to="/terms">Условиями использования</Link> и{' '}
             <Link to="/privacy">Политикой конфиденциальности</Link>
           </small>
