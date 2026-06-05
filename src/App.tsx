@@ -3,6 +3,9 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import NotFoundPage from './pages/NotFoundPage';
+import CreateLinkPage from './pages/CreateLinkPage';
+import LinkResultPage from './pages/LinkResultPage';
+import LinkStatsPage from './pages/LinkStatsPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 const TermsPage = () => <div style={{ padding: '2rem' }}>Условия использования (скоро)</div>;
@@ -37,7 +40,30 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/links/new"
+          element={
+            <ProtectedRoute>
+              <CreateLinkPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/links/:shortCode/result"
+          element={
+            <ProtectedRoute>
+              <LinkResultPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/links/:shortCode/stats"
+          element={
+            <ProtectedRoute>
+              <LinkStatsPage />
+            </ProtectedRoute>
+          }
+        />
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
