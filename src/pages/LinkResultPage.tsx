@@ -146,20 +146,6 @@ export default function LinkResultPage() {
     navigate('/login');
   };
 
-  const handleShareCopy = async () => {
-    if (!link) return;
-
-    try {
-      await navigator.clipboard.writeText(link.short_url);
-      setCopyStatus('Ссылка скопирована!');
-    } catch (error) {
-      console.error('Failed to share short link:', error);
-      setCopyStatus('Не удалось поделиться');
-    }
-
-    window.setTimeout(() => setCopyStatus(''), 2000);
-  };
-
   const getShareUrls = () => {
     if (!link) return { vk: '', telegram: '' };
     const encodedUrl = encodeURIComponent(link.short_url);
@@ -329,31 +315,53 @@ export default function LinkResultPage() {
                   </svg>
                   Настроить QR-код
                 </button>
-                <button onClick={() => setIsShareMenuOpen((isOpen) => !isOpen)} className="result-secondary-btn">
-                  <svg viewBox="0 0 24 24" className="result-btn-icon" aria-hidden="true">
-                    <path d="M18 8A3 3 0 1 0 15 5A3 3 0 0 0 18 8Z" />
-                    <path d="M6 15A3 3 0 1 0 3 12A3 3 0 0 0 6 15Z" />
-                    <path d="M18 22A3 3 0 1 0 15 19A3 3 0 0 0 18 22Z" />
-                    <path d="M8.7 13.4L15.3 17.6" />
-                    <path d="M15.3 6.4L8.7 10.6" />
-                  </svg>
-                  Поделиться
-                </button>
-              </div>
-
-              {isShareMenuOpen && (
-                <div className="result-share-panel">
-                  <a href={shareUrls.vk} target="_blank" rel="noopener noreferrer" className="result-share-link">
-                    VK
-                  </a>
-                  <a href={shareUrls.telegram} target="_blank" rel="noopener noreferrer" className="result-share-link">
-                    Telegram
-                  </a>
-                  <button type="button" onClick={handleShareCopy} className="result-share-link">
-                    Скопировать
+                {isShareMenuOpen ? (
+                  <div className="result-share-inline" aria-label="Поделиться ссылкой">
+                    <a
+                      href={shareUrls.vk}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="result-share-icon-link result-share-vk"
+                      aria-label="Поделиться во VK"
+                      title="VK"
+                    >
+                      VK
+                    </a>
+                    <a
+                      href={shareUrls.telegram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="result-share-icon-link"
+                      aria-label="Поделиться в Telegram"
+                      title="Telegram"
+                    >
+                      <svg viewBox="0 0 24 24" className="result-share-svg" aria-hidden="true">
+                        <path d="M21 4L3 11.3L10 13.6M21 4L17.7 20L10 13.6M21 4L10 13.6M10 13.6L10.8 19L13.6 15.7" />
+                      </svg>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => setIsShareMenuOpen(false)}
+                      className="result-share-icon-link"
+                      aria-label="Закрыть варианты поделиться"
+                      title="Закрыть"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => setIsShareMenuOpen(true)} className="result-secondary-btn">
+                    <svg viewBox="0 0 24 24" className="result-btn-icon" aria-hidden="true">
+                      <path d="M18 8A3 3 0 1 0 15 5A3 3 0 0 0 18 8Z" />
+                      <path d="M6 15A3 3 0 1 0 3 12A3 3 0 0 0 6 15Z" />
+                      <path d="M18 22A3 3 0 1 0 15 19A3 3 0 0 0 18 22Z" />
+                      <path d="M8.7 13.4L15.3 17.6" />
+                      <path d="M15.3 6.4L8.7 10.6" />
+                    </svg>
+                    Поделиться
                   </button>
-                </div>
-              )}
+                )}
+              </div>
 
               <div className="result-action-divider" />
 
