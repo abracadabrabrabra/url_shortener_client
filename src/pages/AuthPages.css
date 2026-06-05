@@ -193,3 +193,14 @@
 .terms-footer a:hover {
   text-decoration: underline;
 }
+
+.success-message {
+  background: #e6f7e6;
+  color: #2e7d32;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  text-align: center;
+  border: 1px solid #a5d6a7;
+}

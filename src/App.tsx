@@ -10,7 +10,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 
 const TermsPage = () => <div style={{ padding: '2rem' }}>Условия использования (скоро)</div>;
 const PrivacyPage = () => <div style={{ padding: '2rem' }}>Политика конфиденциальности (скоро)</div>;
-const ForgotPasswordPage = () => <div style={{ padding: '2rem' }}>Восстановление пароля (скоро)</div>;
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 
 function App() {
   return (

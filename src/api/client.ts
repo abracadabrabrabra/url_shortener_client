@@ -343,6 +343,20 @@ class ApiClient {
     return this.request<UserStats>('/api/user/stats');
   }
 
+  async forgotPassword(email: string): Promise<{ msg: string }> {
+    return this.request<{ msg: string }>('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async resetPassword(email: string, code: string, newPassword: string): Promise<{ msg: string }> {
+    return this.request<{ msg: string }>('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, code, new_password: newPassword }),
+    });
+  }
+
 }
 
 export const apiClient = new ApiClient();

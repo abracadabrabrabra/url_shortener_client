@@ -1,4 +1,4 @@
-import {useRef, useState} from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AuthPages.css';
@@ -15,19 +15,20 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
+    if (!email || !password) {
+      setError('Пожалуйста, заполните все поля');
+      return;
+    }
+
     if (hasSubmitted.current) {
       console.log('Submission already in progress');
       return;
     }
-    hasSubmitted.current = true;
-    setError('');
-    setIsLoading(true);
 
-    if (!email || !password) {
-      setError('Пожалуйста, заполните все поля');
-      setIsLoading(false);
-      return;
-    }
+    hasSubmitted.current = true;
+    setIsLoading(true);
 
     try {
       console.log('Submitting login form');
@@ -37,9 +38,9 @@ export default function LoginPage() {
     } catch (err) {
       console.error('Login error:', err);
       setError('Неверный email или пароль');
+      hasSubmitted.current = false;
     } finally {
       setIsLoading(false);
-      hasSubmitted.current = false;
     }
   };
 
