@@ -21,6 +21,8 @@ export default function DashboardPage() {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const [copyToast, setCopyToast] = useState<CopyToast>(null);
+  const [deletingShortKey, setDeletingShortKey] = useState<string | null>(null);
+  const [editingShortKey, setEditingShortKey] = useState<string | null>(null);
   const pageSize = 20;
   const loadingRef = useRef(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -157,6 +159,43 @@ export default function DashboardPage() {
     console.log('View stats for:', shortKey);
   };
 
+  const handleEditShortKey = async (shortKey: string) => {
+    const shouldEdit = window.confirm(`Изменить короткую ссылку ${shortKey}? Статистика сохранится.`);
+    if (!shouldEdit) return;
+
+    setEditingShortKey(shortKey);
+
+    try {
+      const updatedLink = await apiClient.updateShortKey(shortKey);
+      setLinks((currentLinks) =>
+        currentLinks.map((link) => (link.short_key === shortKey ? updatedLink : link))
+      );
+    } catch (error) {
+      console.error('Failed to update short link:', error);
+      alert('Не удалось изменить короткую ссылку. Попробуйте ещё раз.');
+    } finally {
+      setEditingShortKey(null);
+    }
+  };
+
+  const handleDeleteLink = async (shortKey: string) => {
+    const shouldDelete = window.confirm(`Удалить короткую ссылку ${shortKey}?`);
+    if (!shouldDelete) return;
+
+    setDeletingShortKey(shortKey);
+
+    try {
+      await apiClient.deleteLink(shortKey);
+      setLinks((currentLinks) => currentLinks.filter((link) => link.short_key !== shortKey));
+      await loadStats();
+    } catch (error) {
+      console.error('Failed to delete link:', error);
+      alert('Не удалось удалить ссылку. Попробуйте ещё раз.');
+    } finally {
+      setDeletingShortKey(null);
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-card">
@@ -274,14 +313,24 @@ export default function DashboardPage() {
                   {links.map((link) => (
                     <tr key={link.short_key}>
                       <td>
-                        <a
-                          href={link.short_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="short-link"
-                        >
-                          {link.short_key}
-                        </a>
+                        <div className="short-link-cell">
+                          <a
+                            href={link.short_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="short-link"
+                          >
+                            {link.short_key}
+                          </a>
+                          <button
+                            onClick={() => handleEditShortKey(link.short_key)}
+                            className="edit-short-link-btn"
+                            title="Изменить короткую ссылку"
+                            disabled={editingShortKey === link.short_key}
+                          >
+                            {editingShortKey === link.short_key ? '…' : '✎'}
+                          </button>
+                        </div>
                       </td>
                       <td>
                         <div className="original-link-scroll">
@@ -315,6 +364,14 @@ export default function DashboardPage() {
                             title="Подробная статистика"
                           >
                             📊
+                          </button>
+                          <button
+                            onClick={() => handleDeleteLink(link.short_key)}
+                            className="delete-link-btn"
+                            title="Удалить ссылку"
+                            disabled={deletingShortKey === link.short_key}
+                          >
+                            {deletingShortKey === link.short_key ? '…' : '🗑'}
                           </button>
                         </div>
                       </td>
