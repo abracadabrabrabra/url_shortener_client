@@ -45,9 +45,27 @@ export default function RegisterPage() {
       await register(email, password);
       console.log('Registration successful, navigating to dashboard');
       navigate('/dashboard');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Registration error:', err);
-      setError('Ошибка регистрации. Попробуйте другой email.');
+
+      if (err?.message) {
+        if (err.message.includes('already exists') ||
+            err.message.includes('User with this email already exists')) {
+          setError('Пользователь с таким email уже существует. Попробуйте войти или используйте другой email.');
+        }
+        else if (err?.response?.status === 400 && err?.response?.data?.detail?.includes('already exists')) {
+          setError('Пользователь с таким email уже существует. Попробуйте войти или используйте другой email.');
+        }
+        else if (err.message.includes('password')) {
+          setError('Пароль должен содержать минимум 6 символов');
+        }
+        else {
+          setError('Ошибка регистрации. Попробуйте другой email или повторите попытку позже.');
+        }
+      } else {
+        setError('Ошибка регистрации. Попробуйте другой email.');
+      }
+
       hasSubmitted.current = false;
     } finally {
       setIsLoading(false);
