@@ -4,6 +4,22 @@ import { apiClient } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import './CreateLinkPage.css';
 
+const createLinkErrorMessages: Record<string, string> = {
+  'URL cannot be empty': 'Введите ссылку',
+  'URL must be valid and include scheme and host':
+    'Введите полный URL с протоколом и доменом, например https://example.com',
+  'Only http and https URLs are allowed': 'Можно использовать только ссылки с http:// или https://',
+  'URL must include a valid host': 'Ссылка должна содержать корректный домен, например https://example.com',
+};
+
+const getCreateLinkErrorMessage = (error: unknown) => {
+  if (error instanceof Error && createLinkErrorMessages[error.message]) {
+    return createLinkErrorMessages[error.message];
+  }
+
+  return 'Не удалось создать короткую ссылку. Проверьте URL и попробуйте ещё раз.';
+};
+
 export default function CreateLinkPage() {
   const navigate = useNavigate();
   const { logout, userEmail } = useAuth();
@@ -42,7 +58,7 @@ export default function CreateLinkPage() {
       navigate(`/links/${result.short_code}/result`, { state: { link: result } });
     } catch (error) {
       console.error('Failed to create link:', error);
-      setError('Не удалось создать короткую ссылку. Попробуйте ещё раз.');
+      setError(getCreateLinkErrorMessage(error));
     } finally {
       setIsLoading(false);
     }

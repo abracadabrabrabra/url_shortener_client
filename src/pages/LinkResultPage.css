@@ -305,33 +305,53 @@
   background: #eff6ff;
 }
 
-.result-share-panel {
-  width: 100%;
+.result-share-inline {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 10px;
+  gap: 8px;
+  height: 42px;
+  padding: 4px;
+  box-sizing: border-box;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  background: white;
 }
 
-.result-share-link {
+.result-share-icon-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 38px;
-  padding: 0 12px;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
   border: 1px solid #bfdbfe;
-  border-radius: 12px;
+  border-radius: 9px;
   background: #f8fbff;
   color: #2563eb;
   cursor: pointer;
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
   text-decoration: none;
 }
 
-.result-share-link:hover {
+.result-share-icon-link:hover {
   background: #eff6ff;
+}
+
+.result-share-vk {
+  letter-spacing: -0.5px;
+}
+
+.result-share-svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .result-btn-icon {
