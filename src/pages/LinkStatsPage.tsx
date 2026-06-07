@@ -59,6 +59,21 @@ const formatTime = (value?: string | null) => {
 
 const formatPercent = (value: number) => `${value > 0 ? '+' : ''}${value}%`;
 
+const getNiceChartScale = (maxValue: number) => {
+  const rawStep = Math.max(1, maxValue / 3);
+  const magnitude = 10 ** Math.floor(Math.log10(rawStep));
+  const normalizedStep = rawStep / magnitude;
+  const niceMultiplier = normalizedStep <= 1 ? 1 : normalizedStep <= 2 ? 2 : normalizedStep <= 5 ? 5 : 10;
+  const step = niceMultiplier * magnitude;
+  const max = Math.max(step, Math.ceil(maxValue / step) * step);
+  const tickCount = Math.round(max / step);
+
+  return {
+    max,
+    ticks: Array.from({ length: tickCount + 1 }, (_, index) => step * index),
+  };
+};
+
 function PaperclipIcon() {
   return (
     <svg viewBox="0 0 24 24" className="analytics-stat-svg" aria-hidden="true">
@@ -98,15 +113,15 @@ function ClicksChart({ data }: { data: LinkAnalytics['daily_clicks'] }) {
   const chartData = data.length ? data : [{ date: '', clicks: 0 }];
   const width = 920;
   const height = 210;
-  const padding = { top: 2, right: 22, bottom: 22, left: 42 };
+  const padding = { top: 2, right: 22, bottom: 22, left: 68 };
   const innerWidth = width - padding.left - padding.right;
   const innerHeight = height - padding.top - padding.bottom;
   const maxClicks = Math.max(1, ...chartData.map((item) => item.clicks));
-  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((ratio) => Math.round(maxClicks * ratio));
+  const { max: chartMax, ticks: yTicks } = getNiceChartScale(maxClicks);
 
   const points = chartData.map((item, index) => {
     const x = padding.left + (chartData.length === 1 ? innerWidth / 2 : (innerWidth / (chartData.length - 1)) * index);
-    const y = padding.top + innerHeight - (item.clicks / maxClicks) * innerHeight;
+    const y = padding.top + innerHeight - (item.clicks / chartMax) * innerHeight;
     const tooltipWidth = 118;
     const tooltipHeight = 38;
     const tooltipX = Math.min(
@@ -125,12 +140,12 @@ function ClicksChart({ data }: { data: LinkAnalytics['daily_clicks'] }) {
     <div className="analytics-chart-scroll">
       <svg className="analytics-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Клики по дням">
         {yTicks.map((tick) => {
-          const y = padding.top + innerHeight - (tick / maxClicks) * innerHeight;
+          const y = padding.top + innerHeight - (tick / chartMax) * innerHeight;
           return (
             <g key={`y-${tick}-${y}`}>
               <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} className="chart-grid-line" />
               <text x={padding.left - 12} y={y + 4} textAnchor="end" className="chart-axis-text">
-                {tick}
+                {tick.toLocaleString('ru-RU')}
               </text>
             </g>
           );
