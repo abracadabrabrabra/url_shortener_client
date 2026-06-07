@@ -46,12 +46,12 @@ const buildShortUrl = (shortKey: string, shortUrl?: string) => {
     if (baseUrl.hostname === '0.0.0.0') {
       baseUrl.hostname = 'localhost';
     }
-    baseUrl.pathname = `/${shortKey}`;
+    baseUrl.pathname = `/r/${shortKey}`;
     baseUrl.search = '';
     baseUrl.hash = '';
     return baseUrl.toString();
   } catch {
-    return `/${shortKey}`;
+    return `/r/${shortKey}`;
   }
 };
 
