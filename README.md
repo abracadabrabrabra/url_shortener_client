@@ -300,3 +300,5 @@ dist/
 - `VITE_API_URL` должен указывать на публичный backend/base URL, который доступен из браузера.
 - После изменения `.env` нужно перезапустить dev-сервер или пересобрать production build.
 - Access token хранится в `localStorage` как `access_token`, refresh token как `refresh_token`.
+
+[Ссылка на backend](https://github.com/abracadabrabrabra/url_qr)
