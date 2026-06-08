@@ -7,25 +7,13 @@ Frontend для сервиса сокращения ссылок Shortly. При
 - React 19
 - TypeScript
 - Vite
-- React Router
-- ESLint
-- CSS без UI-библиотек
 
 ## Требования
 
 - Node.js 22+
 - npm 10+
-- Запущенный backend API
 
-Текущие проверенные версии в окружении разработки:
 
-```bash
-node -v
-# v22.22.3
-
-npm -v
-# 10.9.8
-```
 
 ## Запуск
 
@@ -75,29 +63,33 @@ http://localhost:8080
 
 ## Скрипты
 
+Запуск dev-сервера Vite.
+
 ```bash
 npm run dev
 ```
 
-Запуск dev-сервера Vite.
+
+TypeScript-проверка и production-сборка в `dist/`.
+
 
 ```bash
 npm run build
 ```
 
-TypeScript-проверка и production-сборка в `dist/`.
+Локальный preview production-сборки.
+
 
 ```bash
 npm run preview
 ```
 
-Локальный preview production-сборки.
+Проверка ESLint.
 
 ```bash
 npm run lint
 ```
 
-Проверка ESLint.
 
 ## Переменные окружения
 
